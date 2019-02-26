@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>AllenNLP Configuration Wizard (alpha)</title>
+    <style>
+        .choice {
+            cursor: pointer;
+        }
+
+        .probability {
+            color: gray;
+            width: 50px;
+            text-align: right;
+            float: left;
+            margin-right: 5px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt"
+        crossorigin="anonymous">
+</head>
+
+<body>
+    <h2>GPT2 Explorer</h2>
+
+    <div id="app"></div>
+
+    <script src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.2/immutable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.js"></script>
+    <script type="text/babel">
+
+        const baseApi = 'http://localhost:8000'
+
+        class App extends React.Component {
+
+            constructor(props) {
+                super(props)
+
+                this.state = {
+                    output: "Joel is",
+                    words: null,
+                    logits: null,
+                    probabilities: null
+                }
+
+                this.choose = this.choose.bind(this)
+                this.setOutput = this.setOutput.bind(this)
+                this.runOnEnter = this.runOnEnter.bind(this)
+            }
+
+            setOutput(evt) {
+                const value = evt.target.value
+                this.setState({
+                    output: value,
+                    words: null,
+                    logits: null,
+                    probabilities: null
+                })
+            }
+
+            choose(choice = undefined) {
+                const payload = {
+                    "previous": this.state.output,
+                    "next": choice
+                }
+
+                fetch(`${baseApi}/predict`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => this.setState(data))
+            }
+
+            runOnEnter(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.choose()
+                }
+            }
+
+            render() {
+                return (
+                    <div>
+                        <input type="text"
+                               value={this.state.output}
+                               onChange={this.setOutput}
+                               onKeyDown={this.state.output ? this.runOnEnter : null}/>
+                        <button onClick={() => this.choose()}>predict</button>
+
+                        <Choices choose={this.choose} logits={this.state.logits} words={this.state.words} probabilities={this.state.probabilities}/>
+
+                        <div>{this.state.output}</div>
+                    </div>
+                )
+            }
+        }
+
+        const formatProbability = prob => {
+            prob = prob * 100
+            return `${prob.toFixed(1)}%`
+        }
+
+        const Choices = ({logits, words, choose, probabilities}) => {
+            if (!words) { return null }
+
+            const lis = words.map((word, idx) => {
+                const logit = logits[idx]
+                const prob = formatProbability(probabilities[idx])
+
+                return (
+                    <li class="choice" key={word} onClick={() => choose(word)}>
+                        <span class="probability">{prob}</span>
+                        {' '}
+                        <span class="word">{word}</span>
+                    </li>
+                )
+            })
+
+            return (
+                <ul>
+                    {lis}
+                </ul>
+            )
+        }
+
+
+
+        ReactDOM.render(<App />, document.getElementById("app"))
+    </script>
+</body>
+</html>
