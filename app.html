@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>AllenNLP Configuration Wizard (alpha)</title>
+    <title>LM Explorer (alpha)</title>
     <style>
         .choice {
             cursor: pointer;
@@ -30,6 +30,7 @@
     <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.2/immutable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/he/1.2.0/he.min.js"></script>
     <script type="text/babel">
 
         const baseApi = 'http://localhost:8000'
@@ -114,6 +115,9 @@
             const lis = words.map((word, idx) => {
                 const logit = logits[idx]
                 const prob = formatProbability(probabilities[idx])
+
+                // get rid of CRs
+                word = word.replace(/\n/g, "↵")
 
                 return (
                     <li class="choice" key={word} onClick={() => choose(word)}>
