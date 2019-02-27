@@ -10,7 +10,7 @@ from lm_explorer.util.cache import LRUCache
 from lm_explorer.util.sampling import random_sample
 
 class GPT2LanguageModel(LanguageModel):
-    def __init__(self, cache_size: int = 10) -> None:
+    def __init__(self, cache_size: int = 100) -> None:
         """
         Each cache element is about 8MB, so size accordingly.
         """
@@ -45,7 +45,8 @@ class GPT2LanguageModel(LanguageModel):
         logits, present = self.model(inputs, past=past)
         logits = logits[0, -1]
 
-        self._cache[previous] = logits, present
+        key = previous if next is None else previous + next
+        self._cache[key] = logits, present
 
         return logits
 

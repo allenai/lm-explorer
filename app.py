@@ -1,7 +1,7 @@
 """
 """
 
-from typing import List, Callable
+from typing import List, Callable, NamedTuple
 import argparse
 import json
 import logging
@@ -15,8 +15,15 @@ from flask_cors import CORS
 from gevent.pywsgi import WSGIServer
 
 from lm_explorer.lm.gpt2 import GPT2LanguageModel
+from lm_explorer.util.sampling import random_sample
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
+
+
+class BeamElement(NamedTuple):
+    score: float
+    prev_str: str
+    next_str: str
 
 class ServerError(Exception):
     status_code = 400
@@ -67,11 +74,107 @@ def make_app() -> Flask:
         best_words = [model[idx.item()] for idx in best_indices]
         best_probabilities = probabilities[best_indices].tolist()
 
+        # random sample
+        random_id = random_sample(logits)
+        random_word = model[random_id]
+        random_word_logit = logits[random_id].item()
+        random_word_probability = probabilities[random_id].item()
+
         return jsonify({
             "logits": best_logits.tolist(),
             "probabilities": best_probabilities,
             "words": best_words,
             "output": previous_str + (next_str or "")
+        })
+
+    @app.route('/random', methods=['POST', 'OPTIONS'])
+    def random() -> Response:  # pylint: disable=unused-variable
+        if request.method == "OPTIONS":
+            return Response(response="", status=200)
+
+        data = request.get_json()
+
+        previous_str = data["previous"]
+        next_str = data.get("next", None)
+        topk = data.get("topk", 10)
+        num_steps = data.get('numsteps', 1)
+        temperature = data.get("temperature", 1.0)
+
+        logits = model.predict(previous_str, next_str)
+        probabilities = torch.nn.functional.softmax(logits / temperature)
+
+        samples = torch.multinomial(probabilities, num_samples=topk, replacement=False)
+        outputs = [(f"{previous_str}{next_str or ''}", model[idx.item()]) for idx in samples]
+
+
+
+        for _ in range(num_steps - 1):
+            new_outputs = []
+            for p, n in outputs:
+                logits = model.predict(p, n)
+                probabilities = torch.nn.functional.softmax(logits / temperature)
+                random_id = random_sample(logits / temperature)
+                random_word = model[random_id]
+                random_word_logit = logits[random_id].item()
+                random_word_probability = probabilities[random_id].item()
+
+                new_outputs.append((f"{p}{n}", random_word))
+
+            outputs = new_outputs
+
+        return jsonify({
+            "previous": previous_str,
+            "words": [f"{p}{n}" for p, n in outputs],
+            "logits": [0 for _ in outputs],
+            "probabilities": [0 for _ in outputs]
+        })
+
+
+
+
+    @app.route('/beam', methods=['POST', 'OPTIONS'])
+    def beam() -> Response:  # pylint: disable=unused-variable
+        if request.method == "OPTIONS":
+            return Response(response="", status=200)
+
+        data = request.get_json()
+
+        previous_str = data["previous"]
+        next_str = data.get("next", "")
+        topk = data.get("topk", 10)
+        num_steps = data['numsteps']
+
+        def candidates(s1: str = "", s2: str = None, score: float = 0.0) -> List[BeamElement]:
+            logits = model.predict(previous_str + s1, s2)
+            log_probabilities = torch.nn.functional.log_softmax(logits) + score
+
+            best_log_probabilities, best_indices = log_probabilities.topk(topk)
+
+            new_str = s1 if s2 is None else s1 + s2
+
+            beam = [BeamElement(lp.item() + score, new_str, model[idx.item()])
+                    for lp, idx in zip(best_log_probabilities, best_indices)]
+
+            return beam
+
+        # Initial step
+        beam = candidates(next_str)
+
+        for i in range(num_steps - 1):
+            new_beam: List[BeamElement] = []
+
+            for element in beam:
+                new_beam.extend(candidates(element.prev_str, element.next_str, element.score))
+
+            new_beam.sort(key=lambda elt: elt.score, reverse=True)
+
+            beam = new_beam[:topk]
+
+        return jsonify({
+            "previous": previous_str,
+            "words": [elt.prev_str + elt.next_str for elt in beam],
+            "logits": [elt.score for elt in beam],
+            "probabilities": [elt.score for elt in beam]
         })
 
 

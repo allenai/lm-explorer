@@ -7,6 +7,7 @@
     <style>
         .choice {
             cursor: pointer;
+            display: table;
         }
 
         .probability {
@@ -16,6 +17,11 @@
             float: left;
             margin-right: 5px;
         }
+
+        .output {
+            cursor: pointer;
+        }
+
     </style>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt"
         crossorigin="anonymous">
@@ -33,8 +39,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/he/1.2.0/he.min.js"></script>
     <script type="text/babel">
 
-        const baseApi = 'http://localhost:8000'
-
         class App extends React.Component {
 
             constructor(props) {
@@ -50,6 +54,7 @@
                 this.choose = this.choose.bind(this)
                 this.setOutput = this.setOutput.bind(this)
                 this.runOnEnter = this.runOnEnter.bind(this)
+                this.predict = this.predict.bind(this)
             }
 
             setOutput(evt) {
@@ -62,13 +67,38 @@
                 })
             }
 
+            predict(start) {
+                const payload = {
+                    "previous": start
+                }
+
+                const endpoint = '/predict'
+
+
+                fetch(endpoint, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => this.setState(data))
+            }
+
             choose(choice = undefined) {
                 const payload = {
                     "previous": this.state.output,
-                    "next": choice
+                    "next": choice,
+                    "numsteps": 5
+                    // "numsteps": 3
                 }
 
-                fetch(`${baseApi}/predict`, {
+                const endpoint = '/predict'
+                // const endpoint = '/beam'
+                //const endpoint = '/random'
+
+                fetch(endpoint, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -98,10 +128,32 @@
 
                         <Choices choose={this.choose} logits={this.state.logits} words={this.state.words} probabilities={this.state.probabilities}/>
 
-                        <div>{this.state.output}</div>
+                        <Output text={this.state.output} predict={this.predict}/>
                     </div>
                 )
             }
+        }
+
+        const Output = ({text, predict}) => {
+            const tokens = text.split(" ")
+            const words = []
+            let prefix = ""
+
+            const click = start => () => predict(start)
+
+            tokens.forEach((token, idx) => {
+                prefix += token
+                words.push(
+                    <span className="output" onClick={click(prefix)} key={`${idx}-${token}`}>{token}</span>)
+                prefix += " "
+                words.push(<span className="output" key={`${idx}-whitespace`}>{' '}</span>)
+            })
+
+            return (
+                <div className="output">
+                    {words}
+                </div>
+            )
         }
 
         const formatProbability = prob => {
@@ -120,7 +172,7 @@
                 word = word.replace(/\n/g, "↵")
 
                 return (
-                    <li class="choice" key={word} onClick={() => choose(word)}>
+                    <li class="choice" key={`${idx}-${word}`} onClick={() => choose(word)}>
                         <span class="probability">{prob}</span>
                         {' '}
                         <span class="word">{word}</span>
