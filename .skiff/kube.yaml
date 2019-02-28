@@ -1,0 +1,93 @@
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: lm-explorer-certificate
+  namespace: lm-explorer
+spec:
+  secretName: lm-explorer-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: lm-explorer.apps.allenai.org
+  dnsNames:
+  - lm-explorer.apps.allenai.org
+  config:
+    - http01:
+        ingressClass: nginx
+      domains:
+      - lm-explorer.apps.allenai.org
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: lm-explorer-ingress
+  namespace: lm-explorer
+  annotations:
+    certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/enable-cors: "false"
+spec:
+  tls:
+    - secretName: lm-explorer-tls
+      hosts:
+      - lm-explorer.apps.allenai.org
+  rules:
+  - host: lm-explorer.apps.allenai.org
+    http:
+      paths:
+      - backend:
+          serviceName: lm-explorer
+          servicePort: 80
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: lm-explorer
+  name: lm-explorer
+  namespace: lm-explorer
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: lm-explorer
+      name: lm-explorer
+      namespace: lm-explorer
+    spec:
+      containers:
+        - name: lm-explorer
+          image: '%IMAGE%'
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8000
+              scheme: HTTP
+            initialDelaySeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+              scheme: HTTP
+            initialDelaySeconds: 1
+          resources:
+            limits:
+              cpu: "2"
+            requests:
+              cpu: "1"
+              memory: 1000Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lm-explorer
+  namespace: lm-explorer
+spec:
+  selector:
+    app: lm-explorer
+  ports:
+    - port: 80
+      targetPort: 8000
+      name: http
