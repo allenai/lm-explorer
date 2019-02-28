@@ -17,7 +17,7 @@ from gevent.pywsgi import WSGIServer
 from lm_explorer.lm.gpt2 import GPT2LanguageModel
 from lm_explorer.util.sampling import random_sample
 
-logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
+logging.basicConfig(level=logging.INFO)
 
 
 class BeamElement(NamedTuple):
@@ -66,6 +66,9 @@ def make_app() -> Flask:
         previous_str = data["previous"]
         next_str = data.get("next")
         topk = data.get("topk", 10)
+
+        # Log the query
+        app.logger.info(f"<{previous_str}> <{next_str}>")
 
         logits = model.predict(previous_str, next_str)
         probabilities = torch.nn.functional.softmax(logits)
