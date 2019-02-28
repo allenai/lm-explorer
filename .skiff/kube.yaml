@@ -48,7 +48,7 @@ metadata:
   name: lm-explorer
   namespace: lm-explorer
 spec:
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       labels:
