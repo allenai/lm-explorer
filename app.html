@@ -7,6 +7,9 @@
     <link rel="shortcut icon" href="/static/favicon.ico">
     <title>LM Explorer (alpha)</title>
     <style>
+        html, body {
+            height: 100%; /* Needed for container's min-height  */
+        }
     </style>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt"
         crossorigin="anonymous">
@@ -152,10 +155,7 @@
         `
 
         const Footer = styled.div`
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            left: 0;
+            position: relative;
             border: 1px solid #efefef;
             padding: 10px 10px 10px;
         `
@@ -241,6 +241,7 @@
                 .then(data => this.setState({...data, loading: false}))
             }
 
+            // Temporarily (?) disabled
             runOnEnter(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -284,10 +285,10 @@
 
                             {/*<Output text={this.state.output} predict={this.predict}/>*/}
                             <TextInputWrapper>
+                                {/*onKeyDown={this.state.output ? this.runOnEnter : null} */ }
                                 <TextInput type="text"
                                             value={this.state.output}
-                                            onChange={this.setOutput}
-                                            onKeyDown={this.state.output ? this.runOnEnter : null}/>
+                                            onChange={this.setOutput}/>
                             </TextInputWrapper>
 
                         </InputOutput>
