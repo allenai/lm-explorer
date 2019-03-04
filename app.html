@@ -3,54 +3,137 @@
 
 <head>
     <meta charset="utf-8">
+    <link rel="shortcut icon" href="/static/favicon.ico">
     <title>LM Explorer (alpha)</title>
     <style>
-        .choice {
-            cursor: pointer;
-            display: table;
-        }
-
-        .probability {
-            color: gray;
-            width: 50px;
-            text-align: right;
-            float: left;
-            margin-right: 5px;
-        }
-
-        .output {
-            cursor: pointer;
-        }
-
     </style>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt"
         crossorigin="anonymous">
 </head>
 
 <body>
-    <h2>GPT-2 Explorer</h2>
-    
-    <p>
-        This is a demonstration of using the <a href="https://github.com/openai/gpt-2">OpenAI GPT-2</a> language model
-        to generate text. Enter some initial text and click "predict" to generate the most likely next words.
-        Click on one of those words to choose it and continue. Click anywhere in the generated text to "roll back"
-        to that point.
-    </p>
-    <p>
-        Built with love at the <a href = "https://allenai.org">Allen Institute for Artificial Intelligence</a> 
-        (using Hugging Face's 
-         <a href = "https://github.com/huggingface/pytorch-pretrained-BERT">pytorch-pretrained-BERT</a>
-         library, so thanks to them).
-    </p>        
-
     <div id="app"></div>
 
     <script src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.2/immutable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/he/1.2.0/he.min.js"></script>
+    <script src="https://unpkg.com/styled-components/dist/styled-components.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js"></script>
     <script type="text/babel">
+
+        const Wrapper = styled.div`
+            font-family: 'Source Sans Pro', sans-serif;
+            color: #232323;
+        `
+
+        const Title = styled.h1`
+            font-size: 1.5em;
+            text-align: right;
+            color: #2085bc;
+            background: url('static/ai2-logo-header.png');
+            background-repeat: no-repeat;
+            background-size: 360px 71px;
+            height: 71px;
+            line-height: 71px;
+            padding: 5px;
+        `
+
+        const Intro = styled.div`
+           flex: 1 1 50%;
+           position: relative;
+           border: 1px solid #efefef;
+        `
+
+        const IntroParagraph = styled.p`
+            padding: 10px 10px 10px;
+        `
+
+        const InputOutput = styled.div`
+            display: flex;
+        `
+
+        const Inputs = styled.div`
+            padding: 10px;
+            min-width: 150px;
+            max-width: 250px;
+            flex-basis: auto; /* default value */
+            flex-grow: 1;
+        `
+
+        const TextInputWrapper = styled.div`
+            padding: 20px;
+            flex: 1;
+        `
+
+        const TextInput = styled.textarea`
+            width: 100%;
+            font-size: 1.25em;
+            height: 200px;
+        `
+
+        const Button = styled.button`
+            color: #fff!important;
+            background: #2085bc;
+        `
+
+        const ChoiceList = styled.ul`
+        `
+
+        const ChoiceItem = styled.li`
+            cursor: pointer;
+            display: table;
+
+            :hover {
+                font-weight: bold;
+            }
+        `
+
+        const Probability = styled.span`
+            color: gray;
+            width: 50px;
+            text-align: right;
+            float: left;
+            margin-right: 5px;
+        `
+
+        const Token = styled.span`
+        `
+
+        const OutputSentence = styled.div`
+            margin: 20px;
+            font-family: monospace;
+            flex: 1;
+        `
+
+        const OutputToken = styled.span`
+            cursor: pointer;
+
+            :hover {
+                font-weight: bold;
+            }
+        `
+
+        const VR = styled.div`
+            border-left: 1px solid lightgray;
+            margin: 10px;
+            height: 200px;
+        `
+
+
+
+        const OutputSpace = styled.span`
+        `
+
+        const Footer = styled.div`
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            border: 1px solid #efefef;
+            padding: 10px 10px 10px;
+        `
+
 
         class App extends React.Component {
 
@@ -61,10 +144,12 @@
                     output: "Joel is",
                     words: null,
                     logits: null,
-                    probabilities: null
+                    probabilities: null,
+                    loading: false
                 }
 
                 this.choose = this.choose.bind(this)
+                this.debouncedChoose = _.debounce(this.choose, 1000)
                 this.setOutput = this.setOutput.bind(this)
                 this.runOnEnter = this.runOnEnter.bind(this)
                 this.predict = this.predict.bind(this)
@@ -76,11 +161,14 @@
                     output: value,
                     words: null,
                     logits: null,
-                    probabilities: null
+                    probabilities: null,
+                    loading: true
                 })
+                this.debouncedChoose()
             }
 
             predict(start) {
+                this.setState({loading: true})
                 const payload = {
                     "previous": start
                 }
@@ -96,10 +184,15 @@
                     body: JSON.stringify(payload)
                 })
                 .then(response => response.json())
-                .then(data => this.setState(data))
+                .then(data => this.setState({...data, loading: false}))
+            }
+
+            componentDidMount() {
+                this.choose()
             }
 
             choose(choice = undefined) {
+                this.setState({loading: true})
                 const payload = {
                     "previous": this.state.output,
                     "next": choice,
@@ -119,7 +212,7 @@
                     body: JSON.stringify(payload)
                 })
                 .then(response => response.json())
-                .then(data => this.setState(data))
+                .then(data => this.setState({...data, loading: false}))
             }
 
             runOnEnter(e) {
@@ -132,17 +225,51 @@
 
             render() {
                 return (
-                    <div>
-                        <input type="text"
-                               value={this.state.output}
-                               onChange={this.setOutput}
-                               onKeyDown={this.state.output ? this.runOnEnter : null}/>
-                        <button onClick={() => this.choose()}>predict</button>
+                    <Wrapper>
+                        <Title>GPT-2 Explorer</Title>
 
-                        <Choices choose={this.choose} logits={this.state.logits} words={this.state.words} probabilities={this.state.probabilities}/>
+                        <Intro>
+                            <IntroParagraph>
+                                This is a demonstration of using the <a href="https://github.com/openai/gpt-2">OpenAI GPT-2</a> language model
+                                to generate text. Enter some initial text and the model will generate the most likely next words.
+                                You can click on one of those words to choose it and continue or just keep typing.
+                                Click the left arrow at the bottom to undo your last choice.
+                            </IntroParagraph>
+                        </Intro>
 
-                        <Output text={this.state.output} predict={this.predict}/>
-                    </div>
+
+                        <InputOutput>
+
+                           <Inputs>
+                                <img src="/static/ajax-loader.gif" align="middle" hidden={!this.state.loading}/>
+                                <Choices predict={this.predict}
+                                         output={this.state.output}
+                                         choose={this.choose}
+                                         logits={this.state.logits}
+                                         words={this.state.words}
+                                         probabilities={this.state.probabilities}
+                                         hidden={this.state.loading}/>
+
+                                { /* <Button onClick={() => this.choose()}>predict</Button> */ }
+
+                            </Inputs>
+
+                            <VR/>
+
+                            {/*<Output text={this.state.output} predict={this.predict}/>*/}
+                            <TextInputWrapper>
+                                <TextInput type="text"
+                                            value={this.state.output}
+                                            onChange={this.setOutput}
+                                            onKeyDown={this.state.output ? this.runOnEnter : null}/>
+                            </TextInputWrapper>
+
+                        </InputOutput>
+
+                        <Footer>
+                            Built at the <a href="https://allenai.org">Allen Institute for Artificial Intelligence</a> using Hugging Face's <a href="https://github.com/huggingface/pytorch-pretrained-BERT">pytorch-pretrained-BERT</a> library.
+                        </Footer>
+                    </Wrapper>
                 )
             }
         }
@@ -157,15 +284,15 @@
             tokens.forEach((token, idx) => {
                 prefix += token
                 words.push(
-                    <span className="output" onClick={click(prefix)} key={`${idx}-${token}`}>{token}</span>)
+                    <OutputToken onClick={click(prefix)} key={`${idx}-${token}`}>{token}</OutputToken>)
                 prefix += " "
-                words.push(<span className="output" key={`${idx}-whitespace`}>{' '}</span>)
+                words.push(<OutputSpace key={`${idx}-whitespace`}>{' '}</OutputSpace>)
             })
 
             return (
-                <div className="output">
+                <OutputSentence>
                     {words}
-                </div>
+                </OutputSentence>
             )
         }
 
@@ -174,7 +301,7 @@
             return `${prob.toFixed(1)}%`
         }
 
-        const Choices = ({logits, words, choose, probabilities}) => {
+        const Choices = ({output, predict, logits, words, choose, probabilities}) => {
             if (!words) { return null }
 
             const lis = words.map((word, idx) => {
@@ -185,18 +312,36 @@
                 word = word.replace(/\n/g, "↵")
 
                 return (
-                    <li class="choice" key={`${idx}-${word}`} onClick={() => choose(word)}>
-                        <span class="probability">{prob}</span>
+                    <ChoiceItem key={`${idx}-${word}`} onClick={() => choose(word)}>
+                        <Probability>{prob}</Probability>
                         {' '}
-                        <span class="word">{word}</span>
-                    </li>
+                        <Token>{word}</Token>
+                    </ChoiceItem>
                 )
             })
 
+            const goBack = () => {
+                const lastSpace = output.lastIndexOf(" ")
+                let prefix = ""
+                if (lastSpace > 0) {
+                    prefix = output.slice(0, lastSpace)
+                }
+                predict(prefix)
+            }
+
+            const goBackItem = (
+                <ChoiceItem key="go-back" onClick={goBack}>
+                    <Probability>←</Probability>
+                    {' '}
+                    <Token></Token>
+                </ChoiceItem>
+            )
+
             return (
-                <ul>
+                <ChoiceList>
                     {lis}
-                </ul>
+                    {goBackItem}
+                </ChoiceList>
             )
         }
 

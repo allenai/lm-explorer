@@ -56,6 +56,10 @@ def make_app() -> Flask:
     def index() -> Response: # pylint: disable=unused-variable
         return send_file('app.html')
 
+    @app.route('/static/<path:path>')
+    def static_proxy(path: str) -> Response: # pylint: disable=unused-variable
+        return send_from_directory(os.path.join(build_dir, 'static'), path)
+
     @app.route('/predict', methods=['POST', 'OPTIONS'])
     def predict() -> Response:  # pylint: disable=unused-variable
         if request.method == "OPTIONS":
