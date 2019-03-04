@@ -14,6 +14,8 @@ class LRUCache(Generic[K, V]):
         self._default_value = default_value
 
     def __getitem__(self, key: K) -> Optional[V]:
+        if self._capacity == 0:
+            return self._default_value
         try:
             value = self._cache.pop(key)
             self._cache[key] = value
@@ -22,6 +24,9 @@ class LRUCache(Generic[K, V]):
             return self._default_value
 
     def __setitem__(self, key: K, value: V) -> None:
+        if self._capacity == 0:
+            return
+
         try:
             self._cache.pop(key)
         except KeyError:

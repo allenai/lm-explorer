@@ -10,7 +10,7 @@ from lm_explorer.util.cache import LRUCache
 from lm_explorer.util.sampling import random_sample
 
 class GPT2LanguageModel(LanguageModel):
-    def __init__(self, cache_size: int = 100) -> None:
+    def __init__(self, cache_size: int = 0) -> None:
         """
         Each cache element is about 8MB, so size accordingly.
         """
