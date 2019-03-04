@@ -10,7 +10,7 @@ from string import Template
 import sys
 
 import torch
-from flask import Flask, request, Response, jsonify, send_file, send_from_directory
+from flask import Flask, request, Response, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 from gevent.pywsgi import WSGIServer
 
@@ -41,7 +41,7 @@ class ServerError(Exception):
         return error_dict
 
 
-def make_app() -> Flask:
+def make_app(google_analytics_ua: str) -> Flask:
     model = GPT2LanguageModel()
 
     app = Flask(__name__)  # pylint: disable=invalid-name
@@ -54,7 +54,7 @@ def make_app() -> Flask:
 
     @app.route('/')
     def index() -> Response: # pylint: disable=unused-variable
-        return send_file('app.html')
+        return render_template('app.html', google_analytics_ua=google_analytics_ua)
 
     @app.route('/static/<path:path>')
     def static_proxy(path: str) -> Response: # pylint: disable=unused-variable
@@ -196,15 +196,27 @@ def main(args):
     parser = argparse.ArgumentParser(description='Serve up a simple model')
 
     parser.add_argument('--port', type=int, default=8000, help='port to serve the demo on')
+    parser.add_argument('--dev', action='store_true', help='if true launch flask so that the server restarted as changes occur to the template')
 
     args = parser.parse_args(args)
 
-    app = make_app()
+    params = {
+        "google_analytics_ua": os.environ.get("GOOGLE_ANALYTICS_US", )
+    }
+    app = make_app(google_analytics_ua=os.environ.get(
+        "GOOGLE_ANALYTICS_US",
+        "UA-120916510-5" # Defaults to the development / staging UA
+    ))
     CORS(app)
 
-    http_server = WSGIServer(('0.0.0.0', args.port), app, log=sys.stdout)
-    print(f"Model loaded, serving demo on port {args.port}")
-    http_server.serve_forever()
+    if args.dev:
+        app.debug = True
+        app.run(port=args.port, host='0.0.0.0')
+        print(f"Model loaded, serving demo on port {args.port}")
+    else:
+        http_server = WSGIServer(('0.0.0.0', args.port), app, log=sys.stdout)
+        print(f"Model loaded, serving demo on port {args.port}")
+        http_server.serve_forever()
 
 #
 # HTML and Templates for the default bare-bones app are below
