@@ -32,7 +32,7 @@ spec:
   replicas: 3
   strategy:
     rollingUpdate:
-      # Let is spin up a full set of replicas since they take so long to
+      # Let k8s spin up a full set of replicas since they take so long to
       # initialize
       maxSurge: 3
       maxUnavailable: 1
