@@ -198,7 +198,7 @@ def main(args):
     app = make_app()
     CORS(app)
 
-    http_server = WSGIServer(('0.0.0.0', args.port), app)
+    http_server = WSGIServer(('0.0.0.0', args.port), app, log=sys.stdout)
     print(f"Model loaded, serving demo on port {args.port}")
     http_server.serve_forever()
 

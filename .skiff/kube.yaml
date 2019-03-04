@@ -29,7 +29,14 @@ metadata:
   name: lm-explorer
   namespace: lm-explorer
 spec:
-  replicas: 1
+  replicas: 3
+  strategy:
+    rollingUpdate:
+      # Let k8s spin up a full set of replicas since they take so long to
+      # initialize
+      maxSurge: 3
+      maxUnavailable: 1
+    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -40,22 +47,30 @@ spec:
       containers:
         - name: lm-explorer
           image: '%IMAGE%'
+          # Checks whether a newly started pod is ready to receive traffic.
+          # We wait as long as 5 minutes, as the lm-explorer loads a pretty big
+          # model form S3. Logs show this takes ~3 minutes or so in GCP land
+          # so we'll call 5 minutes good.
           readinessProbe:
-            failureThreshold: 3
+            failureThreshold: 9
+            periodSeconds: 30
             httpGet:
               path: /
               port: 8000
               scheme: HTTP
-            initialDelaySeconds: 1
+            initialDelaySeconds: 30
+          # Checks whehter a pod is still alive and can continue to receive traffic.
+          # After 6 failed checks spaced by 10 seconds, the pod will be killed and restarted.
+          # See https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
           livenessProbe:
+            failureThreshold: 6
+            periodSeconds: 10
             httpGet:
               path: /
               port: 8000
               scheme: HTTP
             initialDelaySeconds: 1
           resources:
-            limits:
-              cpu: "2"
             requests:
               cpu: "1"
               memory: 1000Mi
