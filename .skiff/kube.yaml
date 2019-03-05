@@ -13,8 +13,15 @@ spec:
     - secretName: lm-explorer-tls
       hosts:
       - lm-explorer.apps.allenai.org
+      - gpt2.apps.allenai.org
   rules:
   - host: lm-explorer.apps.allenai.org
+    http:
+      paths:
+      - backend:
+          serviceName: lm-explorer
+          servicePort: 80
+  - host: gpt2.apps.allenai.org
     http:
       paths:
       - backend:
