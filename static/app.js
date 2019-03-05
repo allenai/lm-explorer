@@ -322,8 +322,6 @@ class App extends React.Component {
         // weird. If they clicked it overwrite it
         const output = choice === undefined ? this.state.output : data.output
         this.setState({...data, output, loading: false})
-      } else {
-        console.log('Discarded');
       }
     })
     .catch(err => {
