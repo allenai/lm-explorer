@@ -9,7 +9,7 @@ import os
 from string import Template
 import sys
 import hashlib
-import time
+
 
 import torch
 from flask import Flask, request, Response, jsonify, render_template, send_from_directory
