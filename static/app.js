@@ -85,6 +85,37 @@ const LoadingText = styled.div`
   padding-left: 0.5rem;
 `
 
+const InputOutput = styled.div`
+  display: flex;
+
+  @media(max-width: 500px) {
+    display: block;
+  }
+`
+
+const InputOutputColumn = styled.div`
+  flex: 1 1 50%;
+
+  :first-child {
+    padding-right: 1rem;
+  }
+
+  :last-child {
+    padding-left: 1rem;
+  }
+
+  @media(max-width: 500px) {
+    :first-child,
+    :last-child {
+      padding: 0;
+    }
+
+    :first-child {
+      padding: 0 0 1rem;
+    }
+  }
+`
+
 const TextInput = styled.textarea`
   display: block;
   width: 100%;
@@ -105,9 +136,17 @@ const ListItem = styled.li`
   margin: 0 0 0.5rem;
 `
 
+const InputHeader = styled.h2`
+  font-weight: 600;
+  font-size: 1.1em;
+  margin: 0 0 1rem;
+  padding: 0 0 0.5rem;
+  border-bottom: 1px solid #eee;
+`
+
 const ChoiceList = styled.ul`
   padding: 0;
-  margin: 2rem 1rem 1rem 1rem;
+  margin: 0;
   flex-wrap: wrap;
   list-style-type: none;
 `
@@ -154,14 +193,7 @@ const OutputToken = styled.span`
   }
 `
 
-const VR = styled.div`
-  border-left: 1px solid lightgray;
-  margin: 10px;
-  height: 200px;
-`
-
-const OutputSpace = styled.span`
-`
+const OutputSpace = styled.span``
 
 const Footer = styled.div`
   margin: 2rem 0 0 0;
@@ -290,6 +322,7 @@ class App extends React.Component {
   }
 
   render() {
+    console.log(this.state.output);
     return (
       <Wrapper>
         <Title>
@@ -304,26 +337,34 @@ class App extends React.Component {
           Click the left arrow at the bottom to undo your last choice.
         </Intro>
         {/*onKeyDown={this.state.output ? this.runOnEnter : null} */ }
-        <TextInputWrapper>
-          <TextInput type="text"
-                     value={this.state.output}
-                     onChange={this.setOutput}/>
-          {this.state.loading ? (
-            <Loading>
-              <img src="/static/loading-bars.svg" width="25" height="25" />
-              <LoadingText>Loading</LoadingText>
-            </Loading>
-          ) : null}
-        </TextInputWrapper>
-        <Choices predict={this.predict}
-                  output={this.state.output}
-                  choose={this.choose}
-                  logits={this.state.logits}
-                  words={this.state.words}
-                  probabilities={this.state.probabilities}
-                  hidden={this.state.loading}/>
-        { /* <Button onClick={() => this.choose()}>predict</Button> */ }
-        {/*<Output text={this.state.output} predict={this.predict}/>*/}
+        <InputOutput>
+          <InputOutputColumn>
+            <InputHeader>Options:</InputHeader>
+            <Choices predict={this.predict}
+                      output={this.state.output}
+                      choose={this.choose}
+                      logits={this.state.logits}
+                      words={this.state.words}
+                      probabilities={this.state.probabilities}
+                      hidden={this.state.loading}/>
+            { /* <Button onClick={() => this.choose()}>predict</Button> */ }
+            {/*<Output text={this.state.output} predict={this.predict}/>*/}
+          </InputOutputColumn>
+          <InputOutputColumn>
+            <InputHeader>Sentence:</InputHeader>
+            <TextInputWrapper>
+              <TextInput type="text"
+                        value={this.state.output}
+                        onChange={this.setOutput}/>
+              {this.state.loading ? (
+                <Loading>
+                  <img src="/static/loading-bars.svg" width="25" height="25" />
+                  <LoadingText>Loading</LoadingText>
+                </Loading>
+              ) : null}
+            </TextInputWrapper>
+          </InputOutputColumn>
+        </InputOutput>
         <Footer>
           Built at the <a href="https://allenai.org" target="_blank">Allen Institute for Artificial Intelligence</a>
           {' '}using Hugging Face’s <a href="https://github.com/huggingface/pytorch-pretrained-BERT" target="_blank">pytorch-pretrained-BERT</a>
