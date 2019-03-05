@@ -327,7 +327,7 @@ class App extends React.Component {
         {/*<Output text={this.state.output} predict={this.predict}/>*/}
         <Footer>
           Built at the <a href="https://allenai.org" target="_blank">Allen Institute for Artificial Intelligence</a>
-          {' '}using Hugging Face's <a href="https://github.com/huggingface/pytorch-pretrained-BERT" target="_blank">pytorch-pretrained-BERT</a>
+          {' '}using Hugging Face’s <a href="https://github.com/huggingface/pytorch-pretrained-BERT" target="_blank">pytorch-pretrained-BERT</a>
           {' '}library.
         </Footer>
       </Wrapper>
