@@ -214,6 +214,10 @@ function loadFromUrl() {
   return Array.isArray(text) && text.length == 2 ?  decodeURIComponent(text.pop()) : null;
 }
 
+function trimRight(str) {
+  return str.replace(/ +$/, '');
+}
+
 class App extends React.Component {
 
   constructor(props) {
@@ -236,12 +240,13 @@ class App extends React.Component {
 
   setOutput(evt) {
     const value = evt.target.value
+    const trimmed = trimRight(value);
     this.setState({
         output: value,
         words: null,
         logits: null,
         probabilities: null,
-        loading: true
+        loading: trimmed.length > 0
     })
     this.debouncedChoose()
   }
@@ -282,10 +287,16 @@ class App extends React.Component {
   }
 
   choose(choice = undefined, doNotChangeUrl) {
-    this.setState({loading: true})
+    this.setState({ loading: true })
+
+    // strip trailing spaces
+    const trimmedOutput = trimRight(this.state.output);
+    if (trimmedOutput.length === 0) {
+      this.setState({ loading: false });
+      return;
+    }
     const payload = {
-        // strip trailing spaces
-        "previous": this.state.output.replace(/ +$/, ''),
+        "previous": trimmedOutput,
         "next": choice,
         "numsteps": 5
         // "numsteps": 3
