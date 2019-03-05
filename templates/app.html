@@ -1,389 +1,59 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
-    <link rel="shortcut icon" href="/static/favicon.ico">
-    <title>LM Explorer (alpha)</title>
-    <style>
-        html, body {
-            height: 100%; /* Needed for container's min-height  */
-        }
-    </style>
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt"
-        crossorigin="anonymous">
-
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_ua }}"></script>
-    <script>
-        // Disable analytics unless we're in the live environment.
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', '{{ google_analytics_ua }}');
-    </script>
-</head>
-
-<body>
-    <div id="app"></div>
-
-    <script src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.2/immutable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.js"></script>
-    <script src="https://unpkg.com/styled-components/dist/styled-components.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js"></script>
-    <script type="text/babel">
-
-        const Wrapper = styled.div`
-            font-family: 'Source Sans Pro', sans-serif;
-            color: #232323;
-        `
-
-        const Title = styled.h1`
-            font-size: 1.5em;
-            text-align: right;
-            color: #2085bc;
-            background-repeat: no-repeat;
-
-            height: 71px;
-            line-height: 71px;
-            padding: 5px;
-        `
-
-        const LinkHome = styled.a`
-            background-image: url('static/ai2-logo-header.png');
-            background-size: 360px 71px;
-            width: 360px;
-            height: 71px;
-            display: inline-block;
-            float: left;
-
-            @media(max-width: 500px) {
-                background-image: url('static/ai2-logo-header-crop.png');
-                background-size: 89px 71px;
-                width: 89px;
-                height: 71px;
+<!DOCTYPE html><html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="shortcut icon" href="/static/favicon.ico">
+        <title>LM Explorer (alpha)</title>
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css"
+            integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt"
+            crossorigin="anonymous">
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_ua }}"></script>
+        <script>
+            // Disable analytics unless we're in the live environment.
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '{{ google_analytics_ua }}');
+            window.googleUA = '{{ google_analytics_ua }}';
+        </script>
+        <style>
+            * {
+                box-sizing: border-box;
             }
-        `
-
-
-        const Intro = styled.div`
-           flex: 1 1 50%;
-           position: relative;
-           border: 1px solid #efefef;
-        `
-
-        const IntroParagraph = styled.p`
-            padding: 10px 10px 10px;
-        `
-
-        const InputOutput = styled.div`
-            display: flex;
-        `
-
-        const Inputs = styled.div`
-            padding: 10px;
-            min-width: 150px;
-            max-width: 250px;
-
-            @media(max-width 500px) {
-                min-width: 50%;
-                max-width: 50%;
-                width: 50%;
+            html, body {
+                height: 100%; /* Needed for container's min-height */
+                padding: 0;
+                margin: 0;
+                background: rgba(0,0,0,0.01);
             }
-
-            @media(min-width 500px) {
-                flex-basis: auto; /* default value */
-                flex-grow: 1;
+            body {
+                font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+                font-size: 100%;
             }
-        `
-
-        const TextInputWrapper = styled.div`
-            padding: 20px;
-            flex: 1;
-        `
-
-        const TextInput = styled.textarea`
-            width: 100%;
-            font-size: 1.25em;
-            height: 200px;
-        `
-
-        const Button = styled.button`
-            color: #fff!important;
-            background: #2085bc;
-        `
-
-        const ChoiceList = styled.ul`
-        `
-
-        const ChoiceItem = styled.li`
-            cursor: pointer;
-            display: table;
-
-            :hover {
-                font-weight: bold;
+            #app {
+                display: flex;
+                justify-content: center;
             }
-        `
-
-        const Probability = styled.span`
-            color: gray;
-            width: 50px;
-            text-align: right;
-            float: left;
-            margin-right: 5px;
-        `
-
-        const Token = styled.span`
-        `
-
-        const OutputSentence = styled.div`
-            margin: 20px;
-            font-family: monospace;
-            flex: 1;
-        `
-
-        const OutputToken = styled.span`
-            cursor: pointer;
-
-            :hover {
-                font-weight: bold;
+            a[href],
+            a[href]:visited {
+                color: #e39a4c;
+                font-weight: 500;
+                text-decoration: none;
+                cursor: pointer;
             }
-        `
-
-        const VR = styled.div`
-            border-left: 1px solid lightgray;
-            margin: 10px;
-            height: 200px;
-        `
-
-
-
-        const OutputSpace = styled.span`
-        `
-
-        const Footer = styled.div`
-            position: relative;
-            border: 1px solid #efefef;
-            padding: 10px 10px 10px;
-        `
-
-
-        class App extends React.Component {
-
-            constructor(props) {
-                super(props)
-
-                this.state = {
-                    output: "Joel is",
-                    words: null,
-                    logits: null,
-                    probabilities: null,
-                    loading: false
-                }
-
-                this.choose = this.choose.bind(this)
-                this.debouncedChoose = _.debounce(this.choose, 1000)
-                this.setOutput = this.setOutput.bind(this)
-                this.runOnEnter = this.runOnEnter.bind(this)
-                this.predict = this.predict.bind(this)
+            a[href]:hover {
+                text-decoration: underline;
             }
-
-            setOutput(evt) {
-                const value = evt.target.value
-                this.setState({
-                    output: value,
-                    words: null,
-                    logits: null,
-                    probabilities: null,
-                    loading: true
-                })
-                this.debouncedChoose()
-            }
-
-            predict(start) {
-                this.setState({loading: true})
-                const payload = {
-                    "previous": start
-                }
-
-                const endpoint = '/predict'
-
-
-                fetch(endpoint, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(payload)
-                })
-                .then(response => response.json())
-                .then(data => this.setState({...data, loading: false}))
-            }
-
-            componentDidMount() {
-                this.choose()
-            }
-
-            choose(choice = undefined) {
-                this.setState({loading: true})
-                const payload = {
-                    "previous": this.state.output,
-                    "next": choice,
-                    "numsteps": 5
-                    // "numsteps": 3
-                }
-
-                const endpoint = '/predict'
-                // const endpoint = '/beam'
-                //const endpoint = '/random'
-
-                fetch(endpoint, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(payload)
-                })
-                .then(response => response.json())
-                .then(data => this.setState({...data, loading: false}))
-            }
-
-            // Temporarily (?) disabled
-            runOnEnter(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    this.choose()
-                }
-            }
-
-            render() {
-                return (
-                    <Wrapper>
-                        <Title><LinkHome href="https://allenai.org" target="_blank"></LinkHome>GPT-2 Explorer</Title>
-
-                        <Intro>
-                            <IntroParagraph>
-                                This is a demonstration of using the <a href="https://github.com/openai/gpt-2" target="_blank">OpenAI GPT-2</a> language model
-                                to generate text. Enter some initial text and the model will generate the most likely next words.
-                                You can click on one of those words to choose it and continue or just keep typing.
-                                Click the left arrow at the bottom to undo your last choice.
-                            </IntroParagraph>
-                        </Intro>
-
-
-                        <InputOutput>
-
-                           <Inputs>
-                                <img src="/static/ajax-loader.gif" align="middle" hidden={!this.state.loading}/>
-                                <Choices predict={this.predict}
-                                         output={this.state.output}
-                                         choose={this.choose}
-                                         logits={this.state.logits}
-                                         words={this.state.words}
-                                         probabilities={this.state.probabilities}
-                                         hidden={this.state.loading}/>
-
-                                { /* <Button onClick={() => this.choose()}>predict</Button> */ }
-
-                            </Inputs>
-
-                            <VR/>
-
-                            {/*<Output text={this.state.output} predict={this.predict}/>*/}
-                            <TextInputWrapper>
-                                {/*onKeyDown={this.state.output ? this.runOnEnter : null} */ }
-                                <TextInput type="text"
-                                            value={this.state.output}
-                                            onChange={this.setOutput}/>
-                            </TextInputWrapper>
-
-                        </InputOutput>
-
-                        <Footer>
-                            Built at the <a href="https://allenai.org" target="_blank">Allen Institute for Artificial Intelligence</a> using Hugging Face's <a href="https://github.com/huggingface/pytorch-pretrained-BERT" target="_blank">pytorch-pretrained-BERT</a> library.
-                        </Footer>
-                    </Wrapper>
-                )
-            }
-        }
-
-        const Output = ({text, predict}) => {
-            const tokens = text.split(" ")
-            const words = []
-            let prefix = ""
-
-            const click = start => () => predict(start)
-
-            tokens.forEach((token, idx) => {
-                prefix += token
-                words.push(
-                    <OutputToken onClick={click(prefix)} key={`${idx}-${token}`}>{token}</OutputToken>)
-                prefix += " "
-                words.push(<OutputSpace key={`${idx}-whitespace`}>{' '}</OutputSpace>)
-            })
-
-            return (
-                <OutputSentence>
-                    {words}
-                </OutputSentence>
-            )
-        }
-
-        const formatProbability = prob => {
-            prob = prob * 100
-            return `${prob.toFixed(1)}%`
-        }
-
-        const Choices = ({output, predict, logits, words, choose, probabilities}) => {
-            if (!words) { return null }
-
-            const lis = words.map((word, idx) => {
-                const logit = logits[idx]
-                const prob = formatProbability(probabilities[idx])
-
-                // get rid of CRs
-                word = word.replace(/\n/g, "↵")
-
-                return (
-                    <ChoiceItem key={`${idx}-${word}`} onClick={() => choose(word)}>
-                        <Probability>{prob}</Probability>
-                        {' '}
-                        <Token>{word}</Token>
-                    </ChoiceItem>
-                )
-            })
-
-            const goBack = () => {
-                const lastSpace = output.lastIndexOf(" ")
-                let prefix = ""
-                if (lastSpace > 0) {
-                    prefix = output.slice(0, lastSpace)
-                }
-                predict(prefix)
-            }
-
-            const goBackItem = (
-                <ChoiceItem key="go-back" onClick={goBack}>
-                    <Probability>←</Probability>
-                    {' '}
-                    <Token></Token>
-                </ChoiceItem>
-            )
-
-            return (
-                <ChoiceList>
-                    {lis}
-                    {goBackItem}
-                </ChoiceList>
-            )
-        }
-
-
-
-        ReactDOM.render(<App />, document.getElementById("app"))
-    </script>
-</body>
+        </style>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.2/immutable.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.js"></script>
+        <script src="https://unpkg.com/styled-components/dist/styled-components.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js"></script>
+        <script type="text/babel" src="static/app.js?v=1.0.0"></script>
+    </body>
 </html>
