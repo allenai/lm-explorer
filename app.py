@@ -200,11 +200,8 @@ def main(args):
 
     args = parser.parse_args(args)
 
-    params = {
-        "google_analytics_ua": os.environ.get("GOOGLE_ANALYTICS_US", )
-    }
     app = make_app(google_analytics_ua=os.environ.get(
-        "GOOGLE_ANALYTICS_US",
+        "GOOGLE_ANALYTICS_UA",
         "UA-120916510-5" # Defaults to the development / staging UA
     ))
     CORS(app)
