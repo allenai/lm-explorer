@@ -386,7 +386,7 @@ class App extends React.Component {
         <Footer>
           Built at the <a href="https://allenai.org" target="_blank">Allen Institute for Artificial Intelligence</a>
           {' '}using Hugging Face’s <a href="https://github.com/huggingface/pytorch-pretrained-BERT" target="_blank">pytorch-pretrained-BERT</a>
-          {' '}library.
+          {' '}library.  See the <a href="https://github.com/allenai/lm-explorer">source code on GitHub</a>.
         </Footer>
       </Wrapper>
     )
