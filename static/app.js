@@ -81,6 +81,10 @@ const Loading = styled.div`
   color: #8c9296;
 `
 
+const Error = styled(Loading)`
+  color: red;
+`
+
 const LoadingText = styled.div`
   padding-left: 0.5rem;
 `
@@ -228,7 +232,8 @@ class App extends React.Component {
       words: null,
       logits: null,
       probabilities: null,
-      loading: false
+      loading: false,
+      error: false
     }
 
     this.choose = this.choose.bind(this)
@@ -252,7 +257,7 @@ class App extends React.Component {
   }
 
   predict(start) {
-    this.setState({loading: true})
+    this.setState({ loading: true, error: false })
     const payload = {
         "previous": start
     }
@@ -266,6 +271,10 @@ class App extends React.Component {
       })
       .then(response => response.json())
       .then(data => this.setState({...data, loading: false}))
+      .catch(err => {
+        console.error('Error trying to communicate with the API:', err);
+        this.setState({ error: true, loading: false });
+      });
   }
 
   componentDidMount() {
@@ -287,7 +296,7 @@ class App extends React.Component {
   }
 
   choose(choice = undefined, doNotChangeUrl) {
-    this.setState({ loading: true })
+    this.setState({ loading: true, error: false })
 
     // strip trailing spaces
     const trimmedOutput = trimRight(this.state.output);
@@ -322,6 +331,10 @@ class App extends React.Component {
     })
     .then(response => response.json())
     .then(data => this.setState({...data, loading: false}))
+    .catch(err => {
+      console.error('Error trying to communicate with the API:', err);
+      this.setState({ error: true, loading: false });
+    });
   }
 
   // Temporarily (?) disabled
@@ -361,17 +374,22 @@ class App extends React.Component {
                   <LoadingText>Loading</LoadingText>
                 </Loading>
               ) : null}
+              {this.state.error ? (
+                <Error>
+                  ⚠️ Something went wrong. Please try again.
+                </Error>
+              ) : null}
             </TextInputWrapper>
           </InputOutputColumn>
           <InputOutputColumn>
             <InputHeader>Options:</InputHeader>
             <Choices predict={this.predict}
-                      output={this.state.output}
-                      choose={this.choose}
-                      logits={this.state.logits}
-                      words={this.state.words}
-                      probabilities={this.state.probabilities}
-                      hidden={this.state.loading}/>
+                     output={this.state.output}
+                     choose={this.choose}
+                     logits={this.state.logits}
+                     words={this.state.words}
+                     probabilities={this.state.probabilities}
+                     hidden={this.state.loading}/>
             { /* <Button onClick={() => this.choose()}>predict</Button> */ }
             {/*<Output text={this.state.output} predict={this.predict}/>*/}
           </InputOutputColumn>
