@@ -339,18 +339,6 @@ class App extends React.Component {
         {/*onKeyDown={this.state.output ? this.runOnEnter : null} */ }
         <InputOutput>
           <InputOutputColumn>
-            <InputHeader>Options:</InputHeader>
-            <Choices predict={this.predict}
-                      output={this.state.output}
-                      choose={this.choose}
-                      logits={this.state.logits}
-                      words={this.state.words}
-                      probabilities={this.state.probabilities}
-                      hidden={this.state.loading}/>
-            { /* <Button onClick={() => this.choose()}>predict</Button> */ }
-            {/*<Output text={this.state.output} predict={this.predict}/>*/}
-          </InputOutputColumn>
-          <InputOutputColumn>
             <InputHeader>Sentence:</InputHeader>
             <TextInputWrapper>
               <TextInput type="text"
@@ -363,6 +351,18 @@ class App extends React.Component {
                 </Loading>
               ) : null}
             </TextInputWrapper>
+          </InputOutputColumn>
+          <InputOutputColumn>
+            <InputHeader>Options:</InputHeader>
+            <Choices predict={this.predict}
+                      output={this.state.output}
+                      choose={this.choose}
+                      logits={this.state.logits}
+                      words={this.state.words}
+                      probabilities={this.state.probabilities}
+                      hidden={this.state.loading}/>
+            { /* <Button onClick={() => this.choose()}>predict</Button> */ }
+            {/*<Output text={this.state.output} predict={this.predict}/>*/}
           </InputOutputColumn>
         </InputOutput>
         <Footer>

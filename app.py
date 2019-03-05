@@ -8,6 +8,7 @@ import logging
 import os
 from string import Template
 import sys
+import hashlib
 
 import torch
 from flask import Flask, request, Response, jsonify, render_template, send_from_directory
@@ -46,6 +47,12 @@ def make_app(google_analytics_ua: str) -> Flask:
 
     app = Flask(__name__)  # pylint: disable=invalid-name
 
+    # We hash the javascript file and use it as a cache breaker
+    hasher = hashlib.md5()
+    app_js = open("static/app.js")
+    hasher.update(app_js.read().encode())
+    js_hash=hasher.hexdigest()
+
     @app.errorhandler(ServerError)
     def handle_invalid_usage(error: ServerError) -> Response:  # pylint: disable=unused-variable
         response = jsonify(error.to_dict())
@@ -54,7 +61,11 @@ def make_app(google_analytics_ua: str) -> Flask:
 
     @app.route('/')
     def index() -> Response: # pylint: disable=unused-variable
-        return render_template('app.html', google_analytics_ua=google_analytics_ua)
+        return render_template(
+            'app.html',
+            google_analytics_ua=google_analytics_ua,
+            js_hash=js_hash
+        )
 
     @app.route('/static/<path:path>')
     def static_proxy(path: str) -> Response: # pylint: disable=unused-variable
