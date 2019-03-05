@@ -420,21 +420,18 @@ const Choices = ({output, logits, words, choose, probabilities}) => {
   })
 
   const goBack = () => {
-    const lastSpace = output.lastIndexOf(" ")
-    let prefix = ""
-    if (lastSpace > 0) {
-      prefix = output.slice(0, lastSpace)
-    }
-    predict(prefix)
+    window.history.back();
   }
 
   const goBackItem = (
     <ListItem key="go-back">
-      <UndoButton onClick={goBack}>
-        <Probability>←</Probability>
-        {' '}
-        <Token>Undo</Token>
-      </UndoButton>
+      {'history' in window ? (
+        <UndoButton onClick={goBack}>
+          <Probability>←</Probability>
+          {' '}
+          <Token>Undo</Token>
+        </UndoButton>
+      ) : null}
     </ListItem>
   )
 
