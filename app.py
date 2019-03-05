@@ -10,7 +10,6 @@ from string import Template
 import sys
 import hashlib
 
-
 import torch
 from flask import Flask, request, Response, jsonify, render_template, send_from_directory
 from flask_cors import CORS
