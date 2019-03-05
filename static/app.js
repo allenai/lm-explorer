@@ -227,6 +227,8 @@ class App extends React.Component {
   constructor(props) {
     super(props)
 
+    this.currentRequestId = 0;
+
     this.state = {
       output: loadFromUrl() || DEFAULT,
       words: null,
@@ -240,12 +242,12 @@ class App extends React.Component {
     this.debouncedChoose = _.debounce(this.choose, 1000)
     this.setOutput = this.setOutput.bind(this)
     this.runOnEnter = this.runOnEnter.bind(this)
-    this.predict = this.predict.bind(this)
   }
 
   setOutput(evt) {
     const value = evt.target.value
     const trimmed = trimRight(value);
+
     this.setState({
         output: value,
         words: null,
@@ -256,25 +258,10 @@ class App extends React.Component {
     this.debouncedChoose()
   }
 
-  predict(start) {
-    this.setState({ loading: true, error: false })
-    const payload = {
-        "previous": start
-    }
-    const endpoint = '/predict'
-    fetch(endpoint, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload)
-      })
-      .then(response => response.json())
-      .then(data => this.setState({...data, loading: false}))
-      .catch(err => {
-        console.error('Error trying to communicate with the API:', err);
-        this.setState({ error: true, loading: false });
-      });
+  createRequestId() {
+    const nextReqId = this.currentRequestId + 1;
+    this.currentRequestId = nextReqId;
+    return nextReqId;
   }
 
   componentDidMount() {
@@ -304,16 +291,15 @@ class App extends React.Component {
       this.setState({ loading: false });
       return;
     }
+
     const payload = {
-        "previous": trimmedOutput,
-        "next": choice,
-        "numsteps": 5
-        // "numsteps": 3
+      previous: trimmedOutput,
+      next: choice,
+      numsteps: 5
     }
 
+    const currentReqId = this.createRequestId();
     const endpoint = '/predict'
-    // const endpoint = '/beam'
-    //const endpoint = '/random'
 
     if ('history' in window && !doNotChangeUrl) {
       addToUrl(this.state.output, choice);
@@ -323,14 +309,23 @@ class App extends React.Component {
     });
 
     fetch(endpoint, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload)
+      method: "POST",
+      headers: {
+          "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload)
     })
     .then(response => response.json())
-    .then(data => this.setState({...data, loading: false}))
+    .then(data => {
+      if (this.currentRequestId === currentReqId) {
+        // If the user entered text by typing don't overwrite it, as that feels
+        // weird. If they clicked it overwrite it
+        const output = choice === undefined ? this.state.output : data.output
+        this.setState({...data, output, loading: false})
+      } else {
+        console.log('Discarded');
+      }
+    })
     .catch(err => {
       console.error('Error trying to communicate with the API:', err);
       this.setState({ error: true, loading: false });
@@ -360,14 +355,13 @@ class App extends React.Component {
           You can click on one of those words to choose it and continue or just keep typing.
           Click the left arrow at the bottom to undo your last choice.
         </Intro>
-        {/*onKeyDown={this.state.output ? this.runOnEnter : null} */ }
         <InputOutput>
           <InputOutputColumn>
             <InputHeader>Sentence:</InputHeader>
             <TextInputWrapper>
               <TextInput type="text"
                         value={this.state.output}
-                        onKeyDown={this.setOutput}/>
+                        onChange={this.setOutput}/>
               {this.state.loading ? (
                 <Loading>
                   <img src="/static/loading-bars.svg" width="25" height="25" />
@@ -383,15 +377,12 @@ class App extends React.Component {
           </InputOutputColumn>
           <InputOutputColumn>
             <InputHeader>Options:</InputHeader>
-            <Choices predict={this.predict}
-                     output={this.state.output}
+            <Choices output={this.state.output}
                      choose={this.choose}
                      logits={this.state.logits}
                      words={this.state.words}
                      probabilities={this.state.probabilities}
                      hidden={this.state.loading}/>
-            { /* <Button onClick={() => this.choose()}>predict</Button> */ }
-            {/*<Output text={this.state.output} predict={this.predict}/>*/}
           </InputOutputColumn>
         </InputOutput>
         <Footer>
@@ -404,52 +395,34 @@ class App extends React.Component {
   }
 }
 
-const Output = ({text, predict}) => {
-  const tokens = text.split(" ")
-  const words = []
-  let prefix = ""
-
-  const click = start => () => predict(start)
-
-  tokens.forEach((token, idx) => {
-    prefix += token
-    words.push(
-        <OutputToken onClick={click(prefix)} key={`${idx}-${token}`}>{token}</OutputToken>)
-    prefix += " "
-    words.push(<OutputSpace key={`${idx}-whitespace`}>{' '}</OutputSpace>)
-  })
-
-  return <OutputSentence>{words}</OutputSentence>
-}
-
 const formatProbability = prob => {
   prob = prob * 100
   return `${prob.toFixed(1)}%`
 }
 
-const Choices = ({output, predict, logits, words, choose, probabilities}) => {
+const Choices = ({output, logits, words, choose, probabilities}) => {
   if (!words) { return null }
 
   const lis = words.map((word, idx) => {
-      const logit = logits[idx]
-      const prob = formatProbability(probabilities[idx])
+    const logit = logits[idx]
+    const prob = formatProbability(probabilities[idx])
 
-      // get rid of CRs
-      const cleanWord = word.replace(/\n/g, "↵")
+    // get rid of CRs
+    const cleanWord = word.replace(/\n/g, "↵")
 
-      return (
-        <ListItem key={`${idx}-${cleanWord}`}>
-          <ChoiceItem onClick={() => choose(word)}>
-            <Probability>{prob}</Probability>
-            {' '}
-            <Token>{cleanWord}</Token>
-          </ChoiceItem>
-        </ListItem>
-      )
+    return (
+      <ListItem key={`${idx}-${cleanWord}`}>
+        <ChoiceItem onClick={() => choose(word)}>
+          <Probability>{prob}</Probability>
+          {' '}
+          <Token>{cleanWord}</Token>
+        </ChoiceItem>
+      </ListItem>
+    )
   })
 
-const goBack = () => {
-  const lastSpace = output.lastIndexOf(" ")
+  const goBack = () => {
+    const lastSpace = output.lastIndexOf(" ")
     let prefix = ""
     if (lastSpace > 0) {
       prefix = output.slice(0, lastSpace)
