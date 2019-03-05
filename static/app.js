@@ -367,7 +367,7 @@ class App extends React.Component {
             <TextInputWrapper>
               <TextInput type="text"
                         value={this.state.output}
-                        onChange={this.setOutput}/>
+                        onKeyDown={this.setOutput}/>
               {this.state.loading ? (
                 <Loading>
                   <img src="/static/loading-bars.svg" width="25" height="25" />
