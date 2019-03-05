@@ -406,14 +406,14 @@ const Choices = ({output, predict, logits, words, choose, probabilities}) => {
       const prob = formatProbability(probabilities[idx])
 
       // get rid of CRs
-      word = word.replace(/\n/g, "↵")
+      const cleanWord = word.replace(/\n/g, "↵")
 
       return (
-        <ListItem key={`${idx}-${word}`}>
+        <ListItem key={`${idx}-${cleanWord}`}>
           <ChoiceItem onClick={() => choose(word)}>
             <Probability>{prob}</Probability>
             {' '}
-            <Token>{word}</Token>
+            <Token>{cleanWord}</Token>
           </ChoiceItem>
         </ListItem>
       )
