@@ -284,7 +284,8 @@ class App extends React.Component {
   choose(choice = undefined, doNotChangeUrl) {
     this.setState({loading: true})
     const payload = {
-        "previous": this.state.output,
+        // strip trailing spaces
+        "previous": this.state.output.replace(/ +$/, ''),
         "next": choice,
         "numsteps": 5
         // "numsteps": 3
@@ -322,7 +323,6 @@ class App extends React.Component {
   }
 
   render() {
-    console.log(this.state.output);
     return (
       <Wrapper>
         <Title>
