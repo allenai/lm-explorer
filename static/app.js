@@ -347,7 +347,7 @@ class App extends React.Component {
           <AppName>GPT-2 Explorer</AppName>
         </Title>
         <Intro>
-          This is a demonstration uses the public 117M parameter <a href="https://github.com/openai/gpt-2" target="_blank">OpenAI GPT-2</a> language model
+          This demonstration uses the public 117M parameter <a href="https://github.com/openai/gpt-2" target="_blank">OpenAI GPT-2</a> language model
           to generate sentences.<br /><br />
           Enter some initial text and the model will generate the most likely next words.
           You can click on one of those words to choose it and continue or just keep typing.
