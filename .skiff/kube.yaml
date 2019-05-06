@@ -36,7 +36,7 @@ metadata:
   name: lm-explorer
   namespace: lm-explorer
 spec:
-  replicas: 3
+  replicas: 2
   strategy:
     rollingUpdate:
       # Let k8s spin up a full set of replicas since they take so long to
