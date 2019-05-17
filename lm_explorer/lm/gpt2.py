@@ -10,14 +10,19 @@ from lm_explorer.util.cache import LRUCache
 from lm_explorer.util.sampling import random_sample
 
 class GPT2LanguageModel(LanguageModel):
-    def __init__(self, cache_size: int = 0) -> None:
+    def __init__(self, cache_size: int = 0, model_name: str = '117M') -> None:
         """
         Each cache element is about 8MB, so size accordingly.
         """
         # Cache stores tuples, so default value is a tuple
         self._cache = LRUCache(cache_size, default_value=(None, None))
         self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-        self.model = GPT2LMHeadModel.from_pretrained('gpt2')
+        if model_name == '117M':
+            self.model = GPT2LMHeadModel.from_pretrained('gpt2')
+        elif model_name == '345M':
+            self.model = GPT2LMHeadModel.from_pretrained('gpt2-345M-dump')
+        else:
+            exit("model name not found")
 
         # The end of text marker.
         self.END_OF_TEXT = self.tokenizer.encoder["<|endoftext|>"]
