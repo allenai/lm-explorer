@@ -177,7 +177,6 @@ local deployment = {
                     {
                         name: config.appName,
                         image: image,
-                        args: [ 'server/start.py', '--prod' ],
                         readinessProbe: readinessProbe,
                         livenessProbe: livenessProbe,
                         resources: {
