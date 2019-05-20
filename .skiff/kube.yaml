@@ -80,7 +80,7 @@ spec:
           resources:
             requests:
               cpu: "1"
-              memory: 1000Mi
+              memory: 4000Mi
           env:
             - name: GOOGLE_ANALYTICS_UA
               value: UA-120916510-4

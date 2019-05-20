@@ -87,8 +87,7 @@ def make_app(google_analytics_ua: str) -> Flask:
         # Log the query
         app.logger.info(f"<{previous_str}> <{next_str}>")
 
-        #model_name = data.get("model_name", "117M")
-        model_name = "345M"
+        model_name = data.get("model_name", "117M")
         if model_name == "117M":
             logits = model_117M.predict(previous_str, next_str)
         elif model_name == "345M":

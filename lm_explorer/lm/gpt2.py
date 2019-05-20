@@ -9,6 +9,9 @@ from lm_explorer.lm.language_model import LanguageModel
 from lm_explorer.util.cache import LRUCache
 from lm_explorer.util.sampling import random_sample
 
+
+MEDIUM_MODEL = 'https://storage.googleapis.com/allennlp/models/gpt2-345M-dump'
+
 class GPT2LanguageModel(LanguageModel):
     def __init__(self, cache_size: int = 0, model_name: str = '117M') -> None:
         """
@@ -20,7 +23,7 @@ class GPT2LanguageModel(LanguageModel):
         if model_name == '117M':
             self.model = GPT2LMHeadModel.from_pretrained('gpt2')
         elif model_name == '345M':
-            self.model = GPT2LMHeadModel.from_pretrained('gpt2-345M-dump')
+            self.model = GPT2LMHeadModel.from_pretrained(MEDIUM_MODEL)
         else:
             exit("model name not found")
 
