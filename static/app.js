@@ -199,6 +199,12 @@ const OutputToken = styled.span`
 
 const OutputSpace = styled.span``
 
+const ModelChoice = styled.span`
+  font-weight: ${props => props.selected ? 'bold' : 'normal'};
+  color: ${props => props.selected ? 'black' : 'lightgray'};
+  cursor: ${props => props.selected ? 'default' : 'pointer'};
+`
+
 const Footer = styled.div`
   margin: 2rem 0 0 0;
 `
@@ -222,6 +228,8 @@ function trimRight(str) {
   return str.replace(/ +$/, '');
 }
 
+const DEFAULT_MODEL = "345M"
+
 class App extends React.Component {
 
   constructor(props) {
@@ -235,9 +243,11 @@ class App extends React.Component {
       logits: null,
       probabilities: null,
       loading: false,
-      error: false
+      error: false,
+      model: DEFAULT_MODEL
     }
 
+    this.switchModel = this.switchModel.bind(this)
     this.choose = this.choose.bind(this)
     this.debouncedChoose = _.debounce(this.choose, 1000)
     this.setOutput = this.setOutput.bind(this)
@@ -276,10 +286,16 @@ class App extends React.Component {
           loading: true,
           words: null,
           logits: null,
-          probabilities: null
+          probabilities: null,
+          model: this.state.model
         }, () => this.choose(undefined, doNotChangeUrl));
       })
     }
+  }
+
+  switchModel() {
+    const newModel = this.state.model == "117M" ? "345M" : "117M"
+    this.setState({ loading: true, error: false, model: newModel }, this.choose)
   }
 
   choose(choice = undefined, doNotChangeUrl) {
@@ -295,7 +311,8 @@ class App extends React.Component {
     const payload = {
       previous: trimmedOutput,
       next: choice,
-      numsteps: 5
+      numsteps: 5,
+      model_name: this.state.model
     }
 
     const currentReqId = this.createRequestId();
@@ -347,7 +364,9 @@ class App extends React.Component {
           <AppName>GPT-2 Explorer</AppName>
         </Title>
         <Intro>
-          This demonstration uses the public 117M parameter <a href="https://github.com/openai/gpt-2" target="_blank">OpenAI GPT-2</a> language model
+          This demonstration uses the public
+          <ModelSwitcher model={this.state.model} switchModel={this.switchModel}/>
+          parameter <a href="https://github.com/openai/gpt-2" target="_blank">OpenAI GPT-2</a> language model
           to generate sentences.<br /><br />
           Enter some initial text and the model will generate the most likely next words.
           You can click on one of those words to choose it and continue or just keep typing.
@@ -392,6 +411,16 @@ class App extends React.Component {
     )
   }
 }
+
+const ModelSwitcher = ({model, switchModel}) => (
+  <span className="model-switcher" onClick={switchModel}>
+    {' '}
+    <ModelChoice selected={model==="345M"}>345M</ModelChoice>
+    {' '}
+    <ModelChoice selected={model==="117M"}>117M</ModelChoice>
+    {' '}
+  </span>
+)
 
 const formatProbability = prob => {
   prob = prob * 100

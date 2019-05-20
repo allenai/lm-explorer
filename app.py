@@ -43,7 +43,8 @@ class ServerError(Exception):
 
 
 def make_app(google_analytics_ua: str) -> Flask:
-    model = GPT2LanguageModel()
+    model_117M = GPT2LanguageModel(model_name='117M')
+    model_345M = GPT2LanguageModel(model_name='345M')
 
     app = Flask(__name__) # pylint: disable=invalid-name
 
@@ -86,18 +87,26 @@ def make_app(google_analytics_ua: str) -> Flask:
         # Log the query
         app.logger.info(f"<{previous_str}> <{next_str}>")
 
-        logits = model.predict(previous_str, next_str)
+        model_name = data.get("model_name", "117M")
+        if model_name == "117M":
+            logits = model_117M.predict(previous_str, next_str)
+        elif model_name == "345M":
+            logits = model_345M.predict(previous_str, next_str)
+
         probabilities = torch.nn.functional.softmax(logits)
 
         best_logits, best_indices = logits.topk(topk)
-        best_words = [model[idx.item()] for idx in best_indices]
+        if model_name == "117M":
+            best_words = [model_117M[idx.item()] for idx in best_indices]
+        elif model_name == "345M":
+            best_words = [model_345M[idx.item()] for idx in best_indices]
         best_probabilities = probabilities[best_indices].tolist()
 
         # random sample
-        random_id = random_sample(logits)
-        random_word = model[random_id]
-        random_word_logit = logits[random_id].item()
-        random_word_probability = probabilities[random_id].item()
+        # random_id = random_sample(logits)
+        # random_word = model[random_id]
+        # random_word_logit = logits[random_id].item()
+        # random_word_probability = probabilities[random_id].item()
 
         return jsonify({
             "logits": best_logits.tolist(),
