@@ -36,12 +36,12 @@ metadata:
   name: lm-explorer
   namespace: lm-explorer
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     rollingUpdate:
       # Let k8s spin up a full set of replicas since they take so long to
       # initialize
-      maxSurge: 3
+      maxSurge: 2
       maxUnavailable: 1
     type: RollingUpdate
   template:
@@ -80,7 +80,7 @@ spec:
           resources:
             requests:
               cpu: "1"
-              memory: 4000Mi
+              memory: 7000Mi
           env:
             - name: GOOGLE_ANALYTICS_UA
               value: UA-120916510-4
