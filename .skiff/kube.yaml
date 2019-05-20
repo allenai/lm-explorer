@@ -65,7 +65,7 @@ spec:
               path: /
               port: 8000
               scheme: HTTP
-            initialDelaySeconds: 30
+            initialDelaySeconds: 120
           # Checks whehter a pod is still alive and can continue to receive traffic.
           # After 6 failed checks spaced by 10 seconds, the pod will be killed and restarted.
           # See https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
@@ -76,11 +76,11 @@ spec:
               path: /
               port: 8000
               scheme: HTTP
-            initialDelaySeconds: 1
+            initialDelaySeconds: 120
           resources:
             requests:
               cpu: "1"
-              memory: 7000Mi
+              memory: 6000Mi
           env:
             - name: GOOGLE_ANALYTICS_UA
               value: UA-120916510-4
