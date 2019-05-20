@@ -184,11 +184,11 @@ local deployment = {
                             requests: {
                                 // Our machines currently have 2 vCPUs, so this
                                 // will allow 4 apps to run per machine
-                                cpu: '0.5',
+                                cpu: '1',
                                 // Each machine has 13 GB of RAM. We target 4
                                 // apps per machine, so we reserve 3 GB of RAM
                                 // for each (whether they use it our not).
-                                memory: '3Gi'
+                                memory: '6Gi'
                             }
                         },
                         env: [
