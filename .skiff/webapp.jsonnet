@@ -166,6 +166,15 @@ local deployment = {
     spec: {
         revisionHistoryLimit: 3,
         replicas: replicas,
+        strategy: {
+            rollingUpdate: {
+                # Let k8s spin up a full set of replicas since they take so long to
+                # initialize
+                maxSurge: 1,
+                maxUnavailable: 0
+            },
+            type: "RollingUpdate"
+        },
         template: {
             metadata: {
                 name: fullyQualifiedName,
