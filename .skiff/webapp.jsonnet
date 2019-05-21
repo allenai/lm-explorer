@@ -61,12 +61,12 @@ local hosts = [
 local replicas = 1;
 
 // Each app gets it's own namespace
-local namespaceName = 'lm-explorer';
+local namespaceName = config.appName;
 
 // Since we deploy resources for different environments in the same namespace,
 // we need to give things a fully qualified name that includes the environment
 // as to avoid unintentional collission / redefinition.
-local fullyQualifiedName = 'lm-explorer' + '-' + env;
+local fullyQualifiedName = config.appName + '-' + env;
 
 // Every resource is tagged with the same set of labels. These labels serve the
 // following purposes:
