@@ -205,8 +205,8 @@ local deployment = {
                                 value: sha
                             },
                             {
-                                name: GOOGLE_ANALYTICS_UA,
-                                value: UA-120916510-4
+                                name: 'GOOGLE_ANALYTICS_UA',
+                                value: 'UA-120916510-4'
                             }
                         ]
                     }
