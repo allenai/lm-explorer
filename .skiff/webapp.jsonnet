@@ -135,7 +135,7 @@ local readinessProbe = {
     periodSeconds: 30,
     initialDelaySeconds: 120,  // Use a longer delay if your app loads a large model.
     httpGet: {
-        path: '/health?check=readiness',
+        path: '/',
         port: config.httpPort,
         scheme: 'HTTP',
     },
@@ -149,7 +149,7 @@ local livenessProbe = {
     periodSeconds: 10,
     initialDelaySeconds: 120,  // Use a longer delay if your app loads a large model.
     httpGet: {
-        path: '/health?check=liveness',
+        path: '/',
         port: config.httpPort,
         scheme: 'HTTP',
     },
