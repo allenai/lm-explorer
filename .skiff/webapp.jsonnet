@@ -145,14 +145,10 @@ local readinessProbe = {
 // If the `livenessProbe` fails `failureThreshold` times, the pod is killed and restarted by
 // Kubernetes.
 local livenessProbe = {
-    failureThreshold: 6,
-    periodSeconds: 10,
     initialDelaySeconds: 120,  // Use a longer delay if your app loads a large model.
-    httpGet: {
-        path: '/',
-        port: config.httpPort,
-        scheme: 'HTTP',
-    },
+    tcpSocket: {
+        port: config.httpPort
+    }
 };
 
 local deployment = {
