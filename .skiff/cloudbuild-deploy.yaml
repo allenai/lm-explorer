@@ -1,0 +1,59 @@
+steps:
+- id: 'proxy.pull'
+  name: 'gcr.io/cloud-builders/docker'
+  entrypoint: '/bin/bash'
+  args: [
+    '-c',
+    'docker pull gcr.io/$PROJECT_ID/$REPO_NAME-proxy:latest || exit 0'
+  ]
+- id: 'proxy.build'
+  name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+    '-t', 'gcr.io/$PROJECT_ID/$REPO_NAME-proxy:latest',
+    '-t', 'gcr.io/$PROJECT_ID/$REPO_NAME-proxy:$COMMIT_SHA',
+    '--cache-from', 'gcr.io/$PROJECT_ID/$REPO_NAME-proxy:latest',
+    '.',
+    '--build-arg', 'CONF_FILE=prod.conf'
+  ]
+  dir: 'proxy'
+- id: 'proxy.push'
+  name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'push',
+    'gcr.io/$PROJECT_ID/$REPO_NAME-proxy:$COMMIT_SHA'
+  ]
+- id: 'config'
+  name: 'gcr.io/ai2-reviz/jsonnet'
+  args: [
+    'eval',
+    '-y',
+    '--output-file', './webapp.yaml',
+    '--tla-str', 'env=$_ENV',
+    '--tla-str', 'proxyImage=gcr.io/$PROJECT_ID/$REPO_NAME-proxy:$COMMIT_SHA',
+    '--tla-str', 'sha=$COMMIT_SHA',
+    '--tla-str', 'cause=Automated Skiff Deploy SHA:$COMMIT_SHA BUILD:$BUILD_ID',
+    '--tla-str', 'branch=$BRANCH_NAME',
+    '--tla-str', 'repo=$REPO_NAME',
+    '--tla-str', 'buildId=$BUILD_ID',
+    './webapp.jsonnet'
+  ]
+  dir: '.skiff'
+- id: 'deploy'
+  name: 'gcr.io/ai2-reviz/rudder'
+  args: [
+    'deploy',
+    '-f',
+    'webapp.yaml'
+  ]
+  dir: '.skiff'
+substitutions:
+  _ENV: staging
+images: [
+ 'gcr.io/$PROJECT_ID/$REPO_NAME-proxy:$COMMIT_SHA',
+ 'gcr.io/$PROJECT_ID/$REPO_NAME-proxy:latest'
+]
+artifacts:
+  objects:
+    location: 'gs://skiff-archive/$REPO_NAME/$_ENV/$BUILD_ID/$COMMIT_SHA'
+    paths: ['.skiff/webapp.yaml']
