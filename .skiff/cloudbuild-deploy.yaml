@@ -16,7 +16,6 @@ steps:
     '.',
     '--build-arg', 'CONF_FILE=prod.conf'
   ]
-  dir: 'proxy'
 - id: 'proxy.push'
   name: 'gcr.io/cloud-builders/docker'
   args: [
