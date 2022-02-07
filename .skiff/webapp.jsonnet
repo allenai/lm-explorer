@@ -58,7 +58,7 @@ local hosts = [
         config.appName + '.' + env + topLevelDomain
 ];
 
-local replicas = 1;
+local replicas = 0;
 
 // Each app gets it's own namespace
 local namespaceName = config.appName;
